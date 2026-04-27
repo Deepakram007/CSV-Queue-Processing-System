@@ -1,18 +1,40 @@
 const nodemailer = require('nodemailer');
 
+let transporter = null;
+
 /**
  * Configure standard email transporter using a mock or real service
  * For production, you should use real SMTP credentials.
  * We are using Ethereal Email for demonstration, which is safe and easy.
  */
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'smtp.ethereal.email',
-  port: process.env.SMTP_PORT || 587,
-  auth: {
-      user: process.env.SMTP_USER || 'mylene.littel47@ethereal.email',
-      pass: process.env.SMTP_PASS || 'Qx5wF1P1YkX3P2B1kE'
+async function getTransporter() {
+  if (transporter) return transporter;
+
+  if (process.env.SMTP_HOST && process.env.SMTP_USER) {
+    transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: process.env.SMTP_PORT || 587,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
+      }
+    });
+  } else {
+    console.log("No SMTP credentials found in environment. Generating a new Ethereal test account...");
+    const testAccount = await nodemailer.createTestAccount();
+    transporter = nodemailer.createTransport({
+      host: "smtp.ethereal.email",
+      port: 587,
+      secure: false, // true for 465, false for other ports
+      auth: {
+        user: testAccount.user,
+        pass: testAccount.pass,
+      },
+    });
+    console.log(`Generated Ethereal Test Account: ${testAccount.user}`);
   }
-});
+  return transporter;
+}
 
 /**
  * Sends a completion notification email
@@ -21,7 +43,8 @@ const transporter = nodemailer.createTransport({
  */
 async function sendCompletionEmail(email, totalRows) {
   try {
-    const info = await transporter.sendMail({
+    const tp = await getTransporter();
+    const info = await tp.sendMail({
       from: '"CSV Processing System" <noreply@csvsystem.com>',
       to: email,
       subject: "CSV Processing Completed ✅",
@@ -39,7 +62,7 @@ async function sendCompletionEmail(email, totalRows) {
     console.log(`Email sent successfully to ${email} [Message ID: ${info.messageId}]`);
     
     // Ethereal specific, log the URL to preview the email
-    if (info.messageId && transporter.options.host.includes('ethereal')) {
+    if (info.messageId && tp.options.host && tp.options.host.includes('ethereal')) {
        console.log(`Preview Email: ${nodemailer.getTestMessageUrl(info)}`);
     }
 

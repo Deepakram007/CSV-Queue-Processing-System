@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const cors = require('cors');
 const { addCsvJob, csvQueue } = require('./queue');
 
 // Bonus: Optional Bull Board for monitoring
@@ -21,6 +22,8 @@ try {
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Enable CORS for React dev server
+app.use(cors({ origin: ['http://localhost:5173', 'http://localhost:3001'] }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -116,6 +119,28 @@ app.get('/job/:id', async (req, res) => {
     res.json({ id: job.id, state, progress, reason });
   } catch (error) {
     res.status(500).json({ error: 'Error fetching job status.' });
+  }
+});
+
+// Route to get all jobs for the frontend initial load
+app.get('/jobs', async (req, res) => {
+  try {
+    const jobs = await csvQueue.getJobs(['waiting', 'active', 'completed', 'failed', 'delayed']);
+    const jobData = await Promise.all(jobs.map(async (job) => {
+      const state = await job.getState();
+      return {
+        id: job.id,
+        email: job.data.email,
+        filename: job.data.filePath ? path.basename(job.data.filePath) : 'Unknown',
+        _state: state
+      };
+    }));
+    // Sort descending so newest jobs are at the top
+    jobData.sort((a, b) => parseInt(b.id) - parseInt(a.id));
+    res.json(jobData);
+  } catch (error) {
+    console.error('Error fetching jobs:', error);
+    res.status(500).json({ error: 'Error fetching jobs.' });
   }
 });
 

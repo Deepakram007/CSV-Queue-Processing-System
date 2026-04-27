@@ -23,7 +23,7 @@ async function addCsvJob(filePath, email) {
       type: 'exponential',
       delay: 1000,
     },
-    removeOnComplete: true, // Keep it clean
+    removeOnComplete: 100, // Keep last 100 completed jobs for UI history
     removeOnFail: false, // Keep failed jobs for inspection
   });
   
