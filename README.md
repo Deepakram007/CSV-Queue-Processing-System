@@ -1,6 +1,6 @@
 # CSV Queue Processing System
 
-A full-stack backend application designed to efficiently process large CSV files in the background. Built with **Node.js**, **Express**, **BullMQ**, and **Redis**, this system features a robust, scalable architecture with real-time job processing, streaming file parsing, email and dashboard notifications.
+A full-stack application designed to efficiently process large CSV files in the background. Built with **React**, **Node.js**, **Express**, **BullMQ**, and **Redis**, this system features a robust, scalable architecture with real-time job processing, streaming file parsing, email notifications, and a dedicated frontend dashboard for monitoring.
 
 ## Features
 
@@ -11,10 +11,12 @@ A full-stack backend application designed to efficiently process large CSV files
 - **Micro-Progress Updates:** Realtime progress (0-100%) tracking by dynamically recalculating streamed file sizes against current read buffer bites. 
 - **Automatic Cleanup:** Safely unlinks and deletes files off the `uploads/` volume automatically after completion to conserve storage.
 - **Email Notification:** Includes an Ethereal Mock-SMTP (via Nodemailer) implementation to broadcast "success" events with row compilation statistics to target users.
+- **Interactive React Frontend:** A responsive user interface for uploading CSVs, tracking job progress via live polling, viewing real-time job statistics, and filtering job states.
 - **Monitoring Dashboard (Bonus):** Live integrated BullMQ Dashboard accessible inside the web server.
 
 ## Technology Stack
 
+- **Frontend Interface:** [React](https://react.dev/), [Vite](https://vitejs.dev/)
 - **Backend API:** [Node.js](https://nodejs.org/), [Express.js](https://expressjs.com/)
 - **Job Queues:** [BullMQ](https://docs.bullmq.io/)
 - **Data Store / Queue Broker:** [Redis](https://redis.io/)
@@ -29,8 +31,15 @@ A full-stack backend application designed to efficiently process large CSV files
 Navigate to the project root in your terminal.
 
 2. **Install all dependencies:**
+For the backend server:
 ```bash
 npm install
+```
+For the frontend client:
+```bash
+cd client
+npm install
+cd ..
 ```
 
 3. **Deploy a local instance of Redis.**
@@ -43,7 +52,7 @@ docker run -p 6379:6379 -d redis
 
 ## How to Run the Project
 
-This system incorporates two operational Node services: one for receiving API requests, and a detached worker exclusively allocated to compute jobs off the queue. 
+This system incorporates three operational services: one for receiving API requests, a detached worker exclusively allocated to compute jobs off the queue, and a React frontend for the user interface.
 
 **1. Start the Express API Server**
 Open a terminal and run the main server script:
@@ -57,6 +66,14 @@ Launch a completely separate / second terminal inside the exact same project dir
 ```bash
 npm run worker
 ```
+
+**3. Start the React Frontend**
+Launch a third terminal, navigate to the `client` directory, and start the development server:
+```bash
+cd client
+npm run dev
+```
+The frontend application will be available at `http://localhost:5173`.
 
 ---
 
